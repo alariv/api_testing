@@ -406,3 +406,233 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   width: 100%;
 }
+
+/* Player Statistics Table */
+.player-table-container {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.player-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.player-table th {
+  color: black;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+}
+
+.player-table th:first-child {
+  text-align: left;
+}
+
+.player-table td {
+  padding: 8px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 0.9rem;
+  color: #495057;
+  vertical-align: middle;
+}
+
+.player-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+}
+
+.player-table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.player-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #333;
+  min-width: 120px;
+}
+
+/* Odds Widget Styling */
+.odds-widget {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  min-width: 80px;
+  border: 2px solid #3cc55e;
+  border-radius:  10px;
+  padding: 5px 10px;
+  justify-content: center;
+}
+
+.odds-widget.suspended {
+  border: 1px solid #dfdfdf;
+  background-color: rgba(156, 163, 175, 0.1);
+}
+
+.odds-widget.suspended .arrow-up {
+  background: #d8d8d8;
+}
+
+.odds-widget.suspended .arrow-up:hover {
+  background: #6b7280;
+}
+
+.odds-widget.suspended .arrow-down {
+  background: #d8d8d8;
+}
+
+.odds-widget.suspended .arrow-down:hover {
+  background: #6b7280;
+}
+
+.odds-widget.suspended .balance-line {
+  color: #6b7280;
+  background: #e5e7eb;
+}
+
+.odds-widget.suspended .odds-values-prefix {
+  color: #bfbfbf;
+}
+
+.odds-widget.suspended .over-odds,
+.odds-widget.suspended .under-odds {
+  color: #6b7280;
+  background: #e5e7eb;
+}
+
+.odds-arrows {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.arrow-up {
+  color: white;
+  background: #3cc55e;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 25px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.arrow-up:hover {
+  background: #2ea84a;
+  transform: scale(1.1);
+}
+
+.arrow-down {
+  color: white;
+  background: #f67273;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 25px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.arrow-down:hover {
+  background: #e55a5b;
+  transform: scale(1.1);
+}
+
+.balance-line {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f2937;
+  padding: 2px 4px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.odds-values {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.odds-values-prefix {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  min-width: 20px;
+}
+
+.over-odds, .under-odds {
+  padding: 2px 4px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  color: #374151;
+  font-weight: 500;
+  min-width: 30px;
+  text-align: center;
+}
+
+.no-players {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .player-table {
+    font-size: 0.8rem;
+  }
+  
+  .player-table th,
+  .player-table td {
+    padding: 6px 4px;
+  }
+  
+  .odds-widget {
+    min-width: 60px;
+  }
+  
+  .balance-line {
+    font-size: 12px;
+    min-width: 35px;
+  }
+  
+  .over-odds, .under-odds {
+    font-size: 10px;
+    min-width: 25px;
+  }
+}
