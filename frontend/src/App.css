@@ -106,7 +106,6 @@ body {
 }
 
 .api-section:hover {
-  transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
@@ -513,6 +512,11 @@ body {
 .odds-widget.suspended .under-odds {
   color: #6b7280;
   background: #e5e7eb;
+}
+
+/* Balanced market styling */
+.odds-widget.balanced:not(.suspended) {
+  background-color: #e6f5ea;
 }
 
 .odds-arrows {

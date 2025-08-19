@@ -16,19 +16,33 @@ const TableCell = ({
 
 	if (availableBalanceLines.length === 0) return <td>N/A</td>;
 
-	const smallestBalanceLine = Math.min(...availableBalanceLines);
+	// Find the default balance line - prefer is_balanced: true, fallback to smallest
+	let defaultBalanceLine = availableBalanceLines[0]; // fallback to smallest
+
+	// Look for a balance line with is_balanced: true
+	for (const balanceLine of availableBalanceLines) {
+		if (marketData[balanceLine]?.is_balanced === true) {
+			defaultBalanceLine = balanceLine;
+			break;
+		}
+	}
+
 	const currentBalanceLine = getCurrentBalanceLine(
 		player.player_id,
 		marketType,
-		smallestBalanceLine
+		defaultBalanceLine
 	);
 
 	// Create a unique key that changes when the balance line changes
 	const cellKey = `${player.player_id}-${marketType}-${currentBalanceLine}`;
 
 	return (
-		<td key={cellKey}>
-			<div className={`odds-widget ${marketData[currentBalanceLine]?.is_suspended ? 'suspended' : ''}`}>
+		<td key={cellKey} className={`market-${marketType}`}>
+			<div
+				className={`odds-widget market-${marketType} ${
+					marketData[currentBalanceLine]?.is_balanced ? 'balanced' : ''
+				} ${marketData[currentBalanceLine]?.is_suspended ? 'suspended' : ''}`}
+			>
 				<div className='odds-arrows'>
 					<div
 						className='arrow-up'

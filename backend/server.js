@@ -4,12 +4,13 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 require('dotenv').config();
-const { mockJson } = require('./mock.js');
+const { mockJson } = require('../../mock.js');
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+const mock = false;
 const PORT = process.env.PORT || 3001;
 
 // Store SSE clients
@@ -149,8 +150,7 @@ app.post('/api/data', (req, res) => {
 	console.log(`api/data received data: ${req.body}`);
 	// Forward the exact request body to all connected clients
 	// broadcastToAll(req.body);
-	const dataToUse = req.body;
-	// const dataToUse = mockJson;
+	const dataToUse = mock ? mockJson : req.body;
 
 	const data = {
 		fixture_id: dataToUse.fixture_id,

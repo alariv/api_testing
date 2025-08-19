@@ -141,9 +141,23 @@ function App() {
 			.filter((n) => !isNaN(n))
 			.sort((a, b) => a - b);
 
+		// Find the default balance line - prefer is_balanced: true, fallback to smallest
+		let defaultBalanceLine = availableBalanceLines[0]; // fallback to smallest
+
+		// Look for a balance line with is_balanced: true
+		for (const balanceLine of availableBalanceLines) {
+			if (
+				latestMessage.players[playerId].markets[marketType][balanceLine]
+					?.is_balanced === true
+			) {
+				defaultBalanceLine = balanceLine;
+				break;
+			}
+		}
+
 		setBalanceLines((prev) => {
 			const key = `${playerId}-${marketType}`;
-			const currentBalanceLine = prev[key] || 0;
+			const currentBalanceLine = prev[key] || defaultBalanceLine;
 
 			let newBalanceLine = currentBalanceLine;
 
