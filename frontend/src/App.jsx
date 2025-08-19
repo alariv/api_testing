@@ -3,7 +3,9 @@ import './App.css';
 import TableCell from './components/TableCell';
 
 // const API_URL = 'https://odds-composer.api.nbaproptool.com'
-const API_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.DEV
+	? 'http://localhost:3001'
+	: 'https://odds-composer.api.nbaproptool.com';
 
 // Collapsible JSON Viewer Component
 function JsonViewer({ data, level = 0 }) {

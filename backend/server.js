@@ -10,7 +10,8 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const mock = false;
+const mock =
+	process.env.NODE_ENV === 'production' ? false : process.env.MOCK ?? false;
 const PORT = process.env.PORT || 3001;
 
 // Store SSE clients
