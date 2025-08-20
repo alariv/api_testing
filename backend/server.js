@@ -255,7 +255,7 @@ app.post('/api/data', (req, res) => {
 		if (!fixturesData) {
 			return res
 				.status(400)
-				.json({ error: 'No fixture data available for update' });
+				.json({ error: 'No existing fixture data to update' });
 		}
 
 		const updateData = {
@@ -264,11 +264,8 @@ app.post('/api/data', (req, res) => {
 			updateMessageId: dataToUse.messageId || Date.now().toString()
 		};
 
-		// Update the specific player's balance line
 		if (dataToUse.player_id && fixturesData.players[dataToUse.player_id]) {
 			const player = fixturesData.players[dataToUse.player_id];
-
-			// Handle the lines object structure
 			if (dataToUse.lines && typeof dataToUse.lines === 'object') {
 				Object.keys(dataToUse.lines).forEach((balanceLineKey) => {
 					const lineData = dataToUse.lines[balanceLineKey];
@@ -280,29 +277,38 @@ app.post('/api/data', (req, res) => {
 							player.markets[marketType] = {};
 						}
 
+						// If this new line is balanced, set all other lines in this market to false
+						if (lineData.is_balanced) {
+							Object.keys(player.markets[marketType]).forEach(
+								(existingBalanceLine) => {
+									if (player.markets[marketType][existingBalanceLine]) {
+										player.markets[marketType][
+											existingBalanceLine
+										].is_balanced = false;
+									}
+								}
+							);
+						}
+
 						player.markets[marketType][balanceLine] = {
-							balance_line: lineData.balance_line,
-							balance_line_over_odds: lineData.balance_line_over_odds,
-							balance_line_under_odds: lineData.balance_line_under_odds,
-							market_type: lineData.market_type,
-							player_name: lineData.player_name,
-							player_id: lineData.player_id,
-							is_balanced: lineData.is_balanced,
-							is_suspended: lineData.is_suspended,
-							is_closed: lineData.is_closed,
 							id: lineData.id,
-							market_column_suspension: lineData.market_column_suspension,
-							market_suspension: lineData.market_suspension,
-							milestone_line: lineData.milestone_line,
-							milestone_suspended: lineData.milestone_suspended,
-							milestone_over_odds: lineData.milestone_over_odds,
-							milestone_under_odds: lineData.milestone_under_odds,
-							// Additional fields from the update data
+							fixture_id: lineData.fixture_id,
+							player_id: lineData.player_id,
 							sample_count: lineData.sample_count,
 							reliability: lineData.reliability,
 							status: lineData.status,
+							player_name: lineData.player_name,
+							market_type: lineData.market_type,
+							balance_line: lineData.balance_line,
+							milestone_line: lineData.milestone_line,
+							balance_line_over_odds: lineData.balance_line_over_odds,
+							balance_line_under_odds: lineData.balance_line_under_odds,
+							milestone_over_odds: lineData.milestone_over_odds,
+							milestone_under_odds: lineData.milestone_under_odds,
 							created_at: lineData.created_at,
 							updated_at: lineData.updated_at,
+							is_suspended: lineData.is_suspended,
+							is_balanced: lineData.is_balanced,
 							uuid: lineData.uuid,
 							player_team_name: lineData.player_team_name,
 							player_team_id: lineData.player_team_id,
@@ -317,11 +323,15 @@ app.post('/api/data', (req, res) => {
 							balance_line_over_settlement:
 								lineData.balance_line_over_settlement,
 							settlement_value: lineData.settlement_value,
+							is_closed: lineData.is_closed,
 							balanced_line_suspended: lineData.balanced_line_suspended,
 							milestone_suspended: lineData.milestone_suspended,
 							fixture_suspension: lineData.fixture_suspension,
 							team_suspension: lineData.team_suspension,
+							player_suspesion: lineData.player_suspesion,
 							player_suspension: lineData.player_suspension,
+							market_suspension: lineData.market_suspension,
+							market_column_suspension: lineData.market_column_suspension,
 							published_at: lineData.published_at
 						};
 					}
