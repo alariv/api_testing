@@ -4,8 +4,13 @@ const TableCell = ({
 	player,
 	marketType,
 	getCurrentBalanceLine,
-	handleBalanceLineChange
+	handleBalanceLineChange,
+	isBlinking = false
 }) => {
+	console.log(
+		`TableCell rendering for ${player.player_id}-${marketType}, isBlinking: ${isBlinking}`
+	);
+
 	const marketData = player.markets?.[marketType];
 	if (!marketData) return <td>N/A</td>;
 
@@ -41,7 +46,9 @@ const TableCell = ({
 			<div
 				className={`odds-widget market-${marketType} ${
 					marketData[currentBalanceLine]?.is_balanced ? 'balanced' : ''
-				} ${marketData[currentBalanceLine]?.is_suspended ? 'suspended' : ''}`}
+				} ${marketData[currentBalanceLine]?.is_suspended ? 'suspended' : ''} ${
+					isBlinking ? 'blinking' : ''
+				}`}
 			>
 				<div className='odds-arrows'>
 					<div

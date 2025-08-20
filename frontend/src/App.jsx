@@ -88,6 +88,7 @@ function App() {
 	const [pushedMessages, setPushedMessages] = useState([]);
 	const [connectionCount, setConnectionCount] = useState(0);
 	const [balanceLines, setBalanceLines] = useState({}); // Store balance lines for each cell
+	const [blinkingCells, setBlinkingCells] = useState(new Set()); // Track cells that are blinking
 	const eventSourceRef = useRef(null);
 
 	// Function to fetch connection count
@@ -215,6 +216,108 @@ function App() {
 		return balanceLines[key] || defaultBalanceLine;
 	};
 
+	// Function to check if balance line selections need to be reset
+	const checkIfBalanceLinesResetNeeded = (oldMessage, newMessage) => {
+		if (!oldMessage.players || !newMessage.players) return false;
+
+		// Check if any player's market structure has changed significantly
+		for (const playerId in newMessage.players) {
+			const oldPlayer = oldMessage.players[playerId];
+			const newPlayer = newMessage.players[playerId];
+
+			if (!oldPlayer || !newPlayer) continue;
+
+			// Check if market types have changed
+			const oldMarketTypes = Object.keys(oldPlayer.markets || {});
+			const newMarketTypes = Object.keys(newPlayer.markets || {});
+
+			if (oldMarketTypes.length !== newMarketTypes.length) return true;
+
+			// Check if balance lines within markets have changed
+			for (const marketType of newMarketTypes) {
+				const oldMarket = oldPlayer.markets?.[marketType];
+				const newMarket = newPlayer.markets?.[marketType];
+
+				if (!oldMarket || !newMarket) continue;
+
+				const oldBalanceLines = Object.keys(oldMarket);
+				const newBalanceLines = Object.keys(newMarket);
+
+				if (oldBalanceLines.length !== newBalanceLines.length) return true;
+
+				// Check if specific balance line values have changed
+				for (const balanceLine of newBalanceLines) {
+					const oldData = oldMarket[balanceLine];
+					const newData = newMarket[balanceLine];
+
+					if (!oldData || !newData) return true;
+
+					// Check if critical properties have changed
+					if (
+						oldData.is_balanced !== newData.is_balanced ||
+						oldData.is_suspended !== newData.is_suspended ||
+						oldData.balance_line_over_odds !== newData.balance_line_over_odds ||
+						oldData.balance_line_under_odds !== newData.balance_line_under_odds
+					) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	};
+
+	// Function to identify which cells have changed and trigger blinking
+	const identifyChangedCells = (oldMessage, newMessage) => {
+		const changedCells = new Set();
+
+		if (!oldMessage.players || !newMessage.players) return changedCells;
+
+		for (const playerId in newMessage.players) {
+			const oldPlayer = oldMessage.players[playerId];
+			const newPlayer = newMessage.players[playerId];
+
+			if (!oldPlayer || !newPlayer) continue;
+
+			for (const marketType in newPlayer.markets) {
+				const oldMarket = oldPlayer.markets?.[marketType];
+				const newMarket = newPlayer.markets?.[marketType];
+
+				if (!oldMarket || !newMarket) continue;
+
+				for (const balanceLine in newMarket) {
+					const oldData = oldMarket[balanceLine];
+					const newData = newMarket[balanceLine];
+
+					if (!oldData || !newData) continue;
+
+					// Check if critical properties have changed
+					const isBalancedChanged = oldData.is_balanced !== newData.is_balanced;
+					const isSuspendedChanged =
+						oldData.is_suspended !== newData.is_suspended;
+					const overOddsChanged =
+						oldData.balance_line_over_odds !== newData.balance_line_over_odds;
+					const underOddsChanged =
+						oldData.balance_line_under_odds !== newData.balance_line_under_odds;
+
+					if (
+						isBalancedChanged ||
+						isSuspendedChanged ||
+						overOddsChanged ||
+						underOddsChanged
+					) {
+						// Add this cell to the blinking set - simplified key format
+						const cellKey = `${playerId}-${marketType}`;
+						changedCells.add(cellKey);
+					}
+				}
+			}
+		}
+
+		return changedCells;
+	};
+
 	// Function to get connection status
 	const getConnectionStatus = () => {
 		if (!eventSourceRef.current) return 'No connection';
@@ -255,32 +358,85 @@ function App() {
 					const data = JSON.parse(event.data);
 					console.log('Received SSE message:', data);
 
-					// Display all messages except connection and broadcast messages
-					// Since backend forwards exact message, only filter out system messages
-					if (
-						!data.type ||
-						(data.type !== 'connection' && data.type !== 'broadcast')
-					) {
-						const messageId = Date.now() + Math.random();
-						const newMessage = { ...data, isNew: true, messageId };
-						console.log(
-							`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
-								'] data',
-							JSON.stringify(data)
-						);
+					// Check if this is an update message
+					if (data.isUpdate && data.players) {
+						// This is an update - merge with existing data
+						setPushedMessages((prevMessages) => {
+							const existingMessage = prevMessages.find(
+								(msg) => msg.players && !msg.isUpdate
+							);
 
-						// Replace old messages with new data instead of accumulating
+							if (existingMessage) {
+								// Update the existing message with new data
+								const updatedMessage = {
+									...existingMessage,
+									...data,
+									timestamp: new Date().toISOString()
+								};
+
+								// Check if we need to reset user balance line selections
+								// This happens when the underlying market data structure changes significantly
+								const needsBalanceLineReset = checkIfBalanceLinesResetNeeded(
+									existingMessage,
+									updatedMessage
+								);
+
+								if (needsBalanceLineReset) {
+									// Reset user balance line selections when data structure changes
+									setBalanceLines({});
+								}
+
+								// Identify which specific cells have changed and trigger blinking
+								const changedCells = identifyChangedCells(
+									existingMessage,
+									updatedMessage
+								);
+								if (changedCells.size > 0) {
+									// Set the blinking cells
+									setBlinkingCells(changedCells);
+									// Clear blinking after 5 seconds
+									setTimeout(() => {
+										setBlinkingCells(new Set());
+									}, 5000);
+								}
+
+								// Replace the existing message with the updated one
+								return prevMessages.map((msg) =>
+									msg.players && !msg.isUpdate ? updatedMessage : msg
+								);
+							} else {
+								// No existing message, add as new
+								return [
+									{
+										...data,
+										timestamp: new Date().toISOString()
+									}
+								];
+							}
+						});
+					} else {
+						// Regular message - add to messages
+						const newMessage = {
+							...data,
+							timestamp: new Date().toISOString(),
+							isNew: true,
+							messageId: data.messageId || Date.now().toString()
+						};
+
 						setPushedMessages([newMessage]);
 
 						// Remove the isNew flag after 10 seconds
 						setTimeout(() => {
 							setPushedMessages((prev) =>
 								prev.map((msg) =>
-									msg.messageId === messageId ? { ...msg, isNew: false } : msg
+									msg.messageId === newMessage.messageId
+										? { ...msg, isNew: false }
+										: msg
 								)
 							);
 						}, 10000);
 					}
+
 					// Update connection count when receiving messages
 					fetchConnectionCount();
 				} catch (error) {
@@ -385,72 +541,170 @@ function App() {
 													marketType='points'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={(() => {
+														const cellKey = `${player.player_id}-points`;
+														const isBlinking = blinkingCells.has(cellKey);
+														console.log(
+															'Points cell key:',
+															cellKey,
+															'isBlinking:',
+															isBlinking,
+															'blinkingCells:',
+															blinkingCells
+														);
+														return isBlinking;
+													})()}
 												/>
 												<TableCell
 													player={player}
 													marketType='total_rebounds'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${
+															player.player_id
+														}-total_rebounds-${getCurrentBalanceLine(
+															player.player_id,
+															'total_rebounds',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='assists'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${
+															player.player_id
+														}-assists-${getCurrentBalanceLine(
+															player.player_id,
+															'assists',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='blocks'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-blocks-${getCurrentBalanceLine(
+															player.player_id,
+															'blocks',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='steals'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-steals-${getCurrentBalanceLine(
+															player.player_id,
+															'steals',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='turnovers'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${
+															player.player_id
+														}-turnovers-${getCurrentBalanceLine(
+															player.player_id,
+															'turnovers',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='three_point_field_goal'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${
+															player.player_id
+														}-three_point_field_goal-${getCurrentBalanceLine(
+															player.player_id,
+															'three_point_field_goal',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='pra'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-pra-${getCurrentBalanceLine(
+															player.player_id,
+															'pra',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='pr'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-pr-${getCurrentBalanceLine(
+															player.player_id,
+															'pr',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='pa'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-pa-${getCurrentBalanceLine(
+															player.player_id,
+															'pa',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='bs'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-bs-${getCurrentBalanceLine(
+															player.player_id,
+															'bs',
+															0
+														)}`
+													)}
 												/>
 												<TableCell
 													player={player}
 													marketType='ra'
 													getCurrentBalanceLine={getCurrentBalanceLine}
 													handleBalanceLineChange={handleBalanceLineChange}
+													isBlinking={blinkingCells.has(
+														`${player.player_id}-ra-${getCurrentBalanceLine(
+															player.player_id,
+															'ra',
+															0
+														)}`
+													)}
 												/>
 											</tr>
 										))}
@@ -461,7 +715,7 @@ function App() {
 					</div>
 				</div>
 
-				{/* <div className='api-section'>
+				<div className='api-section'>
 					<h2>
 						Messages Pushed from Backend
 						<button
@@ -469,6 +723,18 @@ function App() {
 							className='api-button clear-button'
 						>
 							Clear Messages
+						</button>
+						<button
+							onClick={() => {
+								const testCells = new Set(['591-points', '591-pra']);
+								setBlinkingCells(testCells);
+								console.log('Test blinking cells set:', testCells);
+								setTimeout(() => setBlinkingCells(new Set()), 5000);
+							}}
+							className='api-button'
+							style={{ marginLeft: '10px' }}
+						>
+							Test Blinking
 						</button>
 					</h2>
 					<div className='ws-messages'>
@@ -501,7 +767,7 @@ function App() {
 							))
 						)}
 					</div>
-				</div> */}
+				</div>
 			</main>
 		</div>
 	);

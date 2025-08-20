@@ -5,6 +5,7 @@ const WebSocket = require('ws');
 const path = require('path');
 require('dotenv').config();
 const { mockJson } = require('../../mock.js');
+const { mockUpdateJson } = require('../../mockUpdateJson.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -147,94 +148,195 @@ app.get('/api/hello', (req, res) => {
 	res.json({ message: 'Hello from the backend!' });
 });
 
+const getMockJson = (update) => (update ? mockUpdateJson : mockJson);
+let fixturesData = null;
 app.post('/api/data', (req, res) => {
-	console.log(`api/data received data: ${req.body}`);
+	console.log(`api/data received data: ${JSON.stringify(req.body)}`);
 	// Forward the exact request body to all connected clients
 	// broadcastToAll(req.body);
-	const dataToUse = mock ? mockJson : req.body;
+	const isUpdateReq = !!req.body?.player_id;
+	const dataToUse = mock ? getMockJson(isUpdateReq) : req.body;
+	console.log(
+		`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
+			'] isUpdateReq',
+		isUpdateReq
+	);
 
-	const data = {
-		fixture_id: dataToUse.fixture_id,
-		players: {},
-		isNew: dataToUse.isNew,
-		messageId: dataToUse.messageId
-	};
-	//foreach player with market type
-	dataToUse.player_lines.forEach((playerMarket) => {
-		//foreach existing player
-		let matched = Object.keys(data.players).some(
-			(playerId) => playerId == playerMarket.player_id
-		);
-		!matched &&
-			console.log('matched', matched, playerMarket?.balance_line_over_odds);
-
-		const marketObj = {
-			balance_line: playerMarket?.balance_line,
-			balance_line_over_odds: playerMarket?.balance_line_over_odds,
-			balance_line_under_odds: playerMarket?.balance_line_under_odds,
-			market_type: playerMarket?.market_type,
-			player_name: playerMarket?.player_name,
-			player_id: playerMarket?.player_id,
-			is_balanced: playerMarket?.is_balanced,
-			is_suspended: playerMarket?.is_suspended,
-			is_closed: playerMarket?.is_closed,
-			id: playerMarket?.id,
-			market_column_suspension: playerMarket?.market_column_suspension,
-			market_suspension: playerMarket?.market_suspension,
-			milestone_line: playerMarket?.milestone_line,
-			milestone_suspended: playerMarket?.milestone_suspended,
-			milestone_over_odds: playerMarket?.milestone_over_odds,
-			milestone_under_odds: playerMarket?.milestone_under_odds
+	if (!isUpdateReq) {
+		// Initial data - create new fixture data
+		const data = {
+			fixture_id: dataToUse.fixture_id,
+			players: {},
+			isNew: dataToUse.isNew,
+			messageId: dataToUse.messageId
 		};
 
-		if (!matched) {
-			data.players[playerMarket.player_id] = {
-				away_team_id: playerMarket?.away_team_id,
-				away_team_name: playerMarket?.away_team_name,
-				created_at: playerMarket?.created_at,
-				fixture_id: playerMarket?.fixture_id,
-				fixture_suspension: playerMarket?.fixture_suspension,
-				game_date: playerMarket?.game_date,
-				home_team_id: playerMarket?.home_team_id,
-				home_team_name: playerMarket?.home_team_name,
-				player_id: playerMarket?.player_id,
+		//foreach player with market type
+		dataToUse.player_lines.forEach((playerMarket) => {
+			//foreach existing player
+			let matched = Object.keys(data.players).some(
+				(playerId) => playerId == playerMarket.player_id
+			);
+			!matched &&
+				console.log('matched', matched, playerMarket?.balance_line_over_odds);
+
+			const marketObj = {
+				balance_line: playerMarket?.balance_line,
+				balance_line_over_odds: playerMarket?.balance_line_over_odds,
+				balance_line_under_odds: playerMarket?.balance_line_under_odds,
+				market_type: playerMarket?.market_type,
 				player_name: playerMarket?.player_name,
-				player_suspension: playerMarket?.player_suspension,
-				player_team_id: playerMarket?.player_team_id,
-				player_team_name: playerMarket?.player_team_name,
-				published_at: playerMarket?.published_at,
-				published_at: playerMarket?.published_at,
-				reliability: playerMarket?.reliability,
-				sample_count: playerMarket?.sample_count,
-				settlement_value: playerMarket?.settlement_value,
-				status: playerMarket?.status,
-				team_suspension: playerMarket?.team_suspension,
-				updated_at: playerMarket?.updated_at,
-				uuid: playerMarket?.uuid,
-				markets: {
-					[playerMarket.market_type]: {
-						[playerMarket.balance_line]: marketObj
-					}
-				}
+				player_id: playerMarket?.player_id,
+				is_balanced: playerMarket?.is_balanced,
+				is_suspended: playerMarket?.is_suspended,
+				is_closed: playerMarket?.is_closed,
+				id: playerMarket?.id,
+				market_column_suspension: playerMarket?.market_column_suspension,
+				market_suspension: playerMarket?.market_suspension,
+				milestone_line: playerMarket?.milestone_line,
+				milestone_suspended: playerMarket?.milestone_suspended,
+				milestone_over_odds: playerMarket?.milestone_over_odds,
+				milestone_under_odds: playerMarket?.milestone_under_odds
 			};
-		} else {
-			//PLAYER EXISTED
-			if (
-				data.players[playerMarket.player_id].markets[playerMarket.market_type]
-			) {
-				data.players[playerMarket.player_id].markets[playerMarket.market_type][
-					playerMarket.balance_line
-				] = marketObj;
-			} else {
-				data.players[playerMarket.player_id].markets = {
-					...data.players[playerMarket.player_id].markets,
-					[playerMarket.market_type]: { [playerMarket.balance_line]: marketObj }
+
+			if (!matched) {
+				data.players[playerMarket.player_id] = {
+					away_team_id: playerMarket?.away_team_id,
+					away_team_name: playerMarket?.away_team_name,
+					created_at: playerMarket?.created_at,
+					fixture_id: playerMarket?.fixture_id,
+					fixture_suspension: playerMarket?.fixture_suspension,
+					game_date: playerMarket?.game_date,
+					home_team_id: playerMarket?.home_team_id,
+					home_team_name: playerMarket?.home_team_name,
+					player_id: playerMarket?.player_id,
+					player_name: playerMarket?.player_name,
+					player_suspension: playerMarket?.player_suspension,
+					player_team_id: playerMarket?.player_team_id,
+					player_team_name: playerMarket?.player_team_name,
+					published_at: playerMarket?.published_at,
+					reliability: playerMarket?.reliability,
+					sample_count: playerMarket?.sample_count,
+					settlement_value: playerMarket?.settlement_value,
+					status: playerMarket?.status,
+					team_suspension: playerMarket?.team_suspension,
+					updated_at: playerMarket?.updated_at,
+					uuid: playerMarket?.uuid,
+					markets: {
+						[playerMarket.market_type]: {
+							[playerMarket.balance_line]: marketObj
+						}
+					}
 				};
+			} else {
+				//PLAYER EXISTED
+				if (
+					data.players[playerMarket.player_id].markets[playerMarket.market_type]
+				) {
+					data.players[playerMarket.player_id].markets[
+						playerMarket.market_type
+					][playerMarket.balance_line] = marketObj;
+				} else {
+					data.players[playerMarket.player_id].markets = {
+						...data.players[playerMarket.player_id].markets,
+						[playerMarket.market_type]: {
+							[playerMarket.balance_line]: marketObj
+						}
+					};
+				}
+			}
+		});
+
+		// Store the fixture data for future updates
+		fixturesData = data;
+		broadcastToAll(data);
+	} else {
+		// Update request - update existing fixture data
+		if (!fixturesData) {
+			return res
+				.status(400)
+				.json({ error: 'No fixture data available for update' });
+		}
+
+		const updateData = {
+			...fixturesData,
+			isUpdate: true,
+			updateMessageId: dataToUse.messageId || Date.now().toString()
+		};
+
+		// Update the specific player's balance line
+		if (dataToUse.player_id && fixturesData.players[dataToUse.player_id]) {
+			const player = fixturesData.players[dataToUse.player_id];
+
+			// Handle the lines object structure
+			if (dataToUse.lines && typeof dataToUse.lines === 'object') {
+				Object.keys(dataToUse.lines).forEach((balanceLineKey) => {
+					const lineData = dataToUse.lines[balanceLineKey];
+					const marketType = lineData.market_type;
+					const balanceLine = lineData.balance_line;
+
+					if (marketType && balanceLine) {
+						if (!player.markets[marketType]) {
+							player.markets[marketType] = {};
+						}
+
+						player.markets[marketType][balanceLine] = {
+							balance_line: lineData.balance_line,
+							balance_line_over_odds: lineData.balance_line_over_odds,
+							balance_line_under_odds: lineData.balance_line_under_odds,
+							market_type: lineData.market_type,
+							player_name: lineData.player_name,
+							player_id: lineData.player_id,
+							is_balanced: lineData.is_balanced,
+							is_suspended: lineData.is_suspended,
+							is_closed: lineData.is_closed,
+							id: lineData.id,
+							market_column_suspension: lineData.market_column_suspension,
+							market_suspension: lineData.market_suspension,
+							milestone_line: lineData.milestone_line,
+							milestone_suspended: lineData.milestone_suspended,
+							milestone_over_odds: lineData.milestone_over_odds,
+							milestone_under_odds: lineData.milestone_under_odds,
+							// Additional fields from the update data
+							sample_count: lineData.sample_count,
+							reliability: lineData.reliability,
+							status: lineData.status,
+							created_at: lineData.created_at,
+							updated_at: lineData.updated_at,
+							uuid: lineData.uuid,
+							player_team_name: lineData.player_team_name,
+							player_team_id: lineData.player_team_id,
+							home_team_id: lineData.home_team_id,
+							away_team_id: lineData.away_team_id,
+							home_team_name: lineData.home_team_name,
+							away_team_name: lineData.away_team_name,
+							game_date: lineData.game_date,
+							balance_line_under_settlement:
+								lineData.balance_line_under_settlement,
+							milestone_over_settlement: lineData.milestone_over_settlement,
+							balance_line_over_settlement:
+								lineData.balance_line_over_settlement,
+							settlement_value: lineData.settlement_value,
+							balanced_line_suspended: lineData.balanced_line_suspended,
+							milestone_suspended: lineData.milestone_suspended,
+							fixture_suspension: lineData.fixture_suspension,
+							team_suspension: lineData.team_suspension,
+							player_suspension: lineData.player_suspension,
+							published_at: lineData.published_at
+						};
+					}
+				});
 			}
 		}
-	});
 
-	broadcastToAll(data);
+		broadcastToAll(updateData);
+	}
+
+	console.log(
+		`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
+			'] fixturesData.leng',
+		fixturesData?.players?.length
+	);
 
 	res.json({
 		message: 'Data received successfully!!!!!!!!!!!!!!!!',

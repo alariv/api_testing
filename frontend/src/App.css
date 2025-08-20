@@ -519,6 +519,20 @@ body {
   background-color: #e6f5ea;
 }
 
+/* Blinking animation for updated cells */
+.odds-widget.blinking {
+  animation: cellBlink .5s infinite;
+}
+
+@keyframes cellBlink {
+  0%, 20% {
+    background-color: red !important;
+  }
+  70%, 100% {
+    background-color: inherit;
+  }
+}
+
 .odds-arrows {
   display: flex;
   flex-direction: column;
