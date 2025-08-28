@@ -7,10 +7,6 @@ const TableCell = ({
 	handleBalanceLineChange,
 	isBlinking = false
 }) => {
-	console.log(
-		`TableCell rendering for ${player.player_id}-${marketType}, isBlinking: ${isBlinking}`
-	);
-
 	const marketData = player.markets?.[marketType];
 	if (!marketData) return <td>N/A</td>;
 
