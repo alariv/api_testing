@@ -694,6 +694,17 @@ body {
   max-width: 80px;
 }
 
+.milestone-odds.suspended {
+    background: #ffe1e1;
+    color: #b58b8b;
+}
+
+.player-name.suspended {
+  background: #ffe1e1;
+  color: #b58b8b !important;
+  font-weight: 600;
+}
+
 /* Milestone table header styling */
 .player-table th:not(:first-child) {
   background: #f8f9fa;
@@ -714,13 +725,10 @@ body {
   background: rgba(118, 75, 162, 0.08);
 }
 
-.player-table tbody tr:hover .milestone-odds {
-  background: rgba(118, 75, 162, 0.15);
-}
 
 /* Alternating row colors for better readability */
 .player-table tbody tr:nth-child(even) {
-  background: rgb(118 75 162 / 10%);
+  background: rgb(238 238 238);
 }
 
 .player-table tbody tr:nth-child(odd) {
@@ -729,11 +737,11 @@ body {
 
 /* Ensure hover effect works on alternating rows */
 .player-table tbody tr:nth-child(even):hover {
-  background: rgba(118, 75, 162, 0.08) !important;
+  background: rgb(217 217 217) !important
 }
 
 .player-table tbody tr:nth-child(odd):hover {
-  background: rgba(118, 75, 162, 0.08) !important;
+  background: rgb(217 217 217) !important;
 }
 
 .odds-values {

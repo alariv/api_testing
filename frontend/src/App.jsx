@@ -553,9 +553,25 @@ function App() {
 													);
 												}
 
+												// Check if any milestone for this player is suspended
+												const hasSuspendedMilestone = sortedMilestoneLines.some(
+													(milestoneLine) => {
+														const matchingLine = Object.values(marketData).find(
+															(lineData) =>
+																(lineData?.milestone_line ??
+																	lineData?.line_key) === milestoneLine
+														);
+														return matchingLine?.is_suspended === 1;
+													}
+												);
+
 												return (
 													<tr key={player.player_id}>
-														<td className='player-name'>
+														<td
+															className={`player-name ${
+																hasSuspendedMilestone ? 'suspended' : ''
+															}`}
+														>
 															{player.player_name || 'N/A'}
 														</td>
 														{sortedMilestoneLines.map((milestoneLine) => {
@@ -571,7 +587,11 @@ function App() {
 															return (
 																<td
 																	key={`${player.player_id}-${milestoneLine}`}
-																	className='milestone-odds'
+																	className={`milestone-odds ${
+																		matchingLine?.is_suspended === 1
+																			? 'suspended'
+																			: ''
+																	}`}
 																>
 																	{matchingLine?.milestone_over_odds ?? 'N/A'}
 																</td>
