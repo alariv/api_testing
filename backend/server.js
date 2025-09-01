@@ -302,11 +302,11 @@ app.post('/api/data', (req, res) => {
 
 					// Process each line in the array
 					dataToUse.lines.forEach((lineData) => {
-						const balanceLine = lineData.balance_line;
+						const balanceLine = lineData?.balance_line;
 
 						if (balanceLine !== undefined) {
 							// If this new line is balanced, set all other lines in this market to false
-							if (lineData.is_balanced) {
+							if (lineData?.is_balanced) {
 								Object.keys(player.markets[marketType]).forEach(
 									(existingBalanceLine) => {
 										if (player.markets[marketType][existingBalanceLine]) {
@@ -319,48 +319,48 @@ app.post('/api/data', (req, res) => {
 							}
 
 							player.markets[marketType][balanceLine] = {
-								id: lineData.id,
-								fixture_id: lineData.fixture_id,
-								player_id: lineData.player_id,
-								sample_count: lineData.sample_count,
-								reliability: lineData.reliability,
-								status: lineData.status,
-								player_name: lineData.player_name,
-								market_type: lineData.market_type,
-								balance_line: lineData.balance_line,
-								milestone_line: lineData.milestone_line,
-								balance_line_over_odds: lineData.balance_line_over_odds,
-								balance_line_under_odds: lineData.balance_line_under_odds,
-								milestone_over_odds: lineData.milestone_over_odds,
-								milestone_under_odds: lineData.milestone_under_odds,
-								created_at: lineData.created_at,
-								updated_at: lineData.updated_at,
-								is_suspended: lineData.is_suspended,
-								is_balanced: lineData.is_balanced,
-								uuid: lineData.uuid,
-								player_team_name: lineData.player_team_name,
-								player_team_id: lineData.player_team_id,
-								home_team_id: lineData.home_team_id,
-								away_team_id: lineData.away_team_id,
-								home_team_name: lineData.home_team_name,
-								away_team_name: lineData.away_team_name,
-								game_date: lineData.game_date,
+								id: lineData?.id,
+								fixture_id: lineData?.fixture_id,
+								player_id: lineData?.player_id,
+								sample_count: lineData?.sample_count,
+								reliability: lineData?.reliability,
+								status: lineData?.status,
+								player_name: lineData?.player_name,
+								market_type: lineData?.market_type,
+								balance_line: lineData?.balance_line,
+								milestone_line: lineData?.milestone_line,
+								balance_line_over_odds: lineData?.balance_line_over_odds,
+								balance_line_under_odds: lineData?.balance_line_under_odds,
+								milestone_over_odds: lineData?.milestone_over_odds,
+								milestone_under_odds: lineData?.milestone_under_odds,
+								created_at: lineData?.created_at,
+								updated_at: lineData?.updated_at,
+								is_suspended: lineData?.is_suspended,
+								is_balanced: lineData?.is_balanced,
+								uuid: lineData?.uuid,
+								player_team_name: lineData?.player_team_name,
+								player_team_id: lineData?.player_team_id,
+								home_team_id: lineData?.home_team_id,
+								away_team_id: lineData?.away_team_id,
+								home_team_name: lineData?.home_team_name,
+								away_team_name: lineData?.away_team_name,
+								game_date: lineData?.game_date,
 								balance_line_under_settlement:
-									lineData.balance_line_under_settlement,
-								milestone_over_settlement: lineData.milestone_over_settlement,
+									lineData?.balance_line_under_settlement,
+								milestone_over_settlement: lineData?.milestone_over_settlement,
 								balance_line_over_settlement:
-									lineData.balance_line_over_settlement,
-								settlement_value: lineData.settlement_value,
-								is_closed: lineData.is_closed,
-								balanced_line_suspended: lineData.balanced_line_suspended,
-								milestone_suspended: lineData.milestone_suspended,
-								fixture_suspension: lineData.fixture_suspension,
-								team_suspension: lineData.team_suspension,
-								player_suspesion: lineData.player_suspesion,
-								player_suspension: lineData.player_suspension,
-								market_suspension: lineData.market_suspension,
-								market_column_suspension: lineData.market_column_suspension,
-								published_at: lineData.published_at
+									lineData?.balance_line_over_settlement,
+								settlement_value: lineData?.settlement_value,
+								is_closed: lineData?.is_closed,
+								balanced_line_suspended: lineData?.balanced_line_suspended,
+								milestone_suspended: lineData?.milestone_suspended,
+								fixture_suspension: lineData?.fixture_suspension,
+								team_suspension: lineData?.team_suspension,
+								player_suspesion: lineData?.player_suspesion,
+								player_suspension: lineData?.player_suspension,
+								market_suspension: lineData?.market_suspension,
+								market_column_suspension: lineData?.market_column_suspension,
+								published_at: lineData?.published_at
 							};
 						}
 					});

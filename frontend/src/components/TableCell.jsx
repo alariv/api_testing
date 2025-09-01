@@ -5,7 +5,8 @@ const TableCell = ({
 	marketType,
 	getCurrentBalanceLine,
 	handleBalanceLineChange,
-	isBlinking = false
+	isBlinking = false,
+	isMilestone = false
 }) => {
 	const marketData = player.markets?.[marketType];
 	if (!marketData) return <td>N/A</td>;
@@ -17,32 +18,42 @@ const TableCell = ({
 
 	if (availableBalanceLines.length === 0) return <td>N/A</td>;
 
-	// Find the default balance line - prefer is_balanced: true, fallback to smallest
-	let defaultBalanceLine = availableBalanceLines[0]; // fallback to smallest
+	// Find the default line - for milestones use milestone_line, for balance lines use is_balanced
+	let defaultLine = availableBalanceLines[0]; // fallback to smallest
 
-	// Look for a balance line with is_balanced: true
-	for (const balanceLine of availableBalanceLines) {
-		if (marketData[balanceLine]?.is_balanced === true) {
-			defaultBalanceLine = balanceLine;
-			break;
+	if (isMilestone) {
+		// For milestones, look for the milestone_line value
+		for (const line of availableBalanceLines) {
+			if (marketData[line]?.milestone_line !== undefined) {
+				defaultLine = line;
+				break;
+			}
+		}
+	} else {
+		// For balance lines, look for is_balanced: true
+		for (const balanceLine of availableBalanceLines) {
+			if (marketData[balanceLine]?.is_balanced === true) {
+				defaultLine = balanceLine;
+				break;
+			}
 		}
 	}
 
-	const currentBalanceLine = getCurrentBalanceLine(
+	const currentLine = getCurrentBalanceLine(
 		player.player_id,
 		marketType,
-		defaultBalanceLine
+		defaultLine
 	);
 
-	// Create a unique key that changes when the balance line changes
-	const cellKey = `${player.player_id}-${marketType}-${currentBalanceLine}`;
+	// Create a unique key that changes when the line changes
+	const cellKey = `${player.player_id}-${marketType}-${currentLine}`;
 
 	return (
 		<td key={cellKey} className={`market-${marketType}`}>
 			<div
 				className={`odds-widget market-${marketType} ${
-					marketData[currentBalanceLine]?.is_balanced ? 'balanced' : ''
-				} ${marketData[currentBalanceLine]?.is_suspended ? 'suspended' : ''} ${
+					!isMilestone && marketData[currentLine]?.is_balanced ? 'balanced' : ''
+				} ${marketData[currentLine]?.is_suspended ? 'suspended' : ''} ${
 					isBlinking ? 'blinking' : ''
 				}`}
 			>
@@ -55,7 +66,11 @@ const TableCell = ({
 					>
 						▲
 					</div>
-					<div className='balance-line'>{currentBalanceLine ?? 'N/A'}</div>
+					<div className={isMilestone ? 'milestone-line' : 'balance-line'}>
+						{isMilestone
+							? marketData[currentLine]?.milestone_line ?? 'N/A'
+							: currentLine ?? 'N/A'}
+					</div>
 					<div
 						className='arrow-down'
 						onClick={() =>
@@ -71,10 +86,14 @@ const TableCell = ({
 				</div>
 				<div className='odds-values'>
 					<div className='over-odds'>
-						{marketData[currentBalanceLine]?.balance_line_over_odds ?? 'N/A'}
+						{isMilestone
+							? marketData[currentLine]?.milestone_over_odds ?? 'N/A'
+							: marketData[currentLine]?.balance_line_over_odds ?? 'N/A'}
 					</div>
 					<div className='under-odds'>
-						{marketData[currentBalanceLine]?.balance_line_under_odds ?? 'N/A'}
+						{isMilestone
+							? marketData[currentLine]?.milestone_under_odds ?? 'N/A'
+							: marketData[currentLine]?.balance_line_under_odds ?? 'N/A'}
 					</div>
 				</div>
 			</div>
