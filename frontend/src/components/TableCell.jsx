@@ -96,6 +96,39 @@ const TableCell = ({
 							: marketData[currentLine]?.balance_line_under_odds ?? 'N/A'}
 					</div>
 				</div>
+				<div className='settlements'>
+					<div
+						className={`settlement-circle ${
+							marketData[currentLine]?.balance_line_over_settlement === 'W'
+								? 'win'
+								: marketData[currentLine]?.balance_line_over_settlement === 'L'
+								? 'loss'
+								: 'neutral'
+						}`}
+						title={`Over settlement: ${
+							marketData[currentLine]?.balance_line_over_settlement || 'N/A'
+						}`}
+					>
+						{marketData[currentLine]?.balance_line_over_settlement ?? ''}
+					</div>
+					<div className='settlement-value'>
+						{marketData[currentLine]?.settlement_value ?? ''}
+					</div>
+					<div
+						className={`settlement-circle ${
+							marketData[currentLine]?.balance_line_under_settlement === 'W'
+								? 'win'
+								: marketData[currentLine]?.balance_line_under_settlement === 'L'
+								? 'loss'
+								: 'neutral'
+						}`}
+						title={`Under settlement: ${
+							marketData[currentLine]?.balance_line_under_settlement || 'N/A'
+						}`}
+					>
+						{marketData[currentLine]?.balance_line_under_settlement ?? ''}
+					</div>
+				</div>
 			</div>
 		</td>
 	);

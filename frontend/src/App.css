@@ -554,11 +554,11 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
-  min-width: 80px;
-  border: 2px solid #3cc55e;
-  border-radius:  10px;
-  padding: 5px 10px;
+  gap: 2px;
+  min-width: 70px;
+  border: 1px solid #3cc55e;
+  border-radius: 6px;
+  padding: 5px 6px;
   justify-content: center;
 }
 
@@ -621,17 +621,17 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .arrow-up {
   color: white;
-  background: #3cc55e;
-  font-size: 12px;
+  background: #3cc55e9e;
+  font-size: 10px;
   font-weight: bold;
   cursor: pointer;
-  width: 25px;
-  border-radius: 3px;
+  width: 20px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -646,12 +646,12 @@ body {
 
 .arrow-down {
   color: white;
-  background: #f67273;
-  font-size: 12px;
+  background: #f67273c4;
+  font-size: 10px;
   font-weight: bold;
   cursor: pointer;
-  width: 25px;
-  border-radius: 3px;
+  width: 20px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -667,12 +667,12 @@ body {
 .balance-line,
 .milestone-line {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   color: #1f2937;
-  padding: 2px 4px;
+  padding: 1px 3px;
   background: #f3f4f6;
-  border-radius: 4px;
-  min-width: 40px;
+  border-radius: 3px;
+  min-width: 35px;
   text-align: center;
 }
 
@@ -692,6 +692,43 @@ body {
   border: 1px solid #e5e7eb;
   min-width: 70px;
   max-width: 80px;
+}
+
+.milestone-odds-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.milestone-odds-value {
+  font-weight: 500;
+  color: #374151;
+}
+
+.milestone-settlement-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: white;
+}
+
+.milestone-settlement-circle.win {
+  background: #3cc55e9e;
+}
+
+.milestone-settlement-circle.loss {
+  background: #f67273c4;
+}
+
+.milestone-settlement-circle.neutral {
+  background: #6b728014;
 }
 
 .milestone-odds.suspended {
@@ -747,19 +784,58 @@ body {
 .odds-values {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 11px;
+  gap: 2px;
+  font-size: 10px;
 }
 
 .odds-values-prefix {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 11px;
+  gap: 2px;
+  font-size: 9px;
   font-weight: 600;
   color: #374151;
   text-align: center;
-  min-width: 20px;
+  min-width: 15px;
+}
+
+.settlements {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+}
+
+.settlement-value {
+  font-size: 8px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  min-width: 12px;
+}
+
+.settlement-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: white;
+}
+
+.settlement-circle.win {
+  background: #3cc55e9e;
+}
+
+.settlement-circle.loss {
+  background: #f67273c4;
+}
+
+.settlement-circle.neutral {
+  background: #6b728014;
 }
 
 .over-odds, .under-odds {
@@ -770,6 +846,17 @@ body {
   font-weight: 500;
   min-width: 30px;
   text-align: center;
+  padding: 2px 4px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  color: #374151;
+  font-weight: 500;
+  min-width: 30px;
+  text-align: center;
+  display: flex;
+  height: 25px;
+  justify-content: center;
+  align-items: center;
 }
 
 .no-players {

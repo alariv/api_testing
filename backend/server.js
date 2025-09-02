@@ -6,6 +6,7 @@ const path = require('path');
 require('dotenv').config();
 const { mockJson } = require('../../mock.js');
 const { mockJson2 } = require('../../mock2.js');
+const { mockJson3 } = require('../../mock3.js');
 const { mockUpdateJson } = require('../../mockUpdateJson.js');
 
 const app = express();
@@ -149,7 +150,7 @@ app.get('/api/hello', (req, res) => {
 	res.json({ message: 'Hello from the backend!' });
 });
 
-const getMockJson = (update) => (update ? mockJson2 : mockJson);
+const getMockJson = (update) => (update ? mockJson3 : mockJson);
 
 let fixturesData = null;
 app.post('/api/data', (req, res) => {
@@ -167,14 +168,14 @@ app.post('/api/data', (req, res) => {
 	if (!isUpdateReq) {
 		// Initial data - create new fixture data
 		const data = {
-			fixture_id: dataToUse.fixture_id,
+			fixture_id: dataToUse?.fixture_id,
 			players: {},
-			isNew: dataToUse.isNew,
-			messageId: dataToUse.messageId
+			isNew: dataToUse?.isNew,
+			messageId: dataToUse?.messageId
 		};
 
 		//foreach player with market type
-		dataToUse.player_lines.forEach((playerMarket) => {
+		dataToUse?.player_lines.forEach((playerMarket) => {
 			//foreach existing player
 			let matched = Object.keys(data.players).some(
 				(playerId) => playerId == playerMarket.player_id
@@ -256,8 +257,8 @@ app.post('/api/data', (req, res) => {
 		const initialData = {
 			...data,
 			new_lines:
-				dataToUse.player_lines && Array.isArray(dataToUse.player_lines)
-					? dataToUse.player_lines.length
+				dataToUse?.player_lines && Array.isArray(dataToUse?.player_lines)
+					? dataToUse?.player_lines.length
 					: 0
 		};
 
@@ -279,21 +280,21 @@ app.post('/api/data', (req, res) => {
 		const updateData = {
 			...fixturesData,
 			isUpdate: true,
-			updateMessageId: dataToUse.messageId || Date.now().toString(),
+			updateMessageId: dataToUse?.messageId || Date.now().toString(),
 			new_lines:
-				dataToUse.lines && Array.isArray(dataToUse.lines)
-					? dataToUse.lines.length
+				dataToUse?.lines && Array.isArray(dataToUse?.lines)
+					? dataToUse?.lines.length
 					: 0
 		};
 
-		if (dataToUse.player_id && fixturesData.players[dataToUse.player_id]) {
-			const player = fixturesData.players[dataToUse.player_id];
-			if (dataToUse.lines && Array.isArray(dataToUse.lines)) {
+		if (dataToUse?.player_id && fixturesData.players[dataToUse?.player_id]) {
+			const player = fixturesData.players[dataToUse?.player_id];
+			if (dataToUse?.lines && Array.isArray(dataToUse?.lines)) {
 				// Get the market type from the first line (all lines should have same market_type)
-				const marketType = dataToUse.lines[0]?.market_type;
+				const marketType = dataToUse?.lines[0]?.market_type;
 
 				console.log(
-					`Updating player ${dataToUse.player_id}, market ${marketType} with ${dataToUse.lines.length} lines`
+					`Updating player ${dataToUse?.player_id}, market ${marketType} with ${dataToUse?.lines.length} lines`
 				);
 
 				if (marketType) {
@@ -301,7 +302,7 @@ app.post('/api/data', (req, res) => {
 					player.markets[marketType] = {};
 
 					// Process each line in the array
-					dataToUse.lines.forEach((lineData) => {
+					dataToUse?.lines.forEach((lineData) => {
 						const balanceLine = lineData?.balance_line;
 
 						if (balanceLine !== undefined) {
@@ -366,7 +367,7 @@ app.post('/api/data', (req, res) => {
 					});
 
 					console.log(
-						`Updated player ${dataToUse.player_id}, market ${marketType}. New balance lines:`,
+						`Updated player ${dataToUse?.player_id}, market ${marketType}. New balance lines:`,
 						Object.keys(player.markets[marketType])
 					);
 				}

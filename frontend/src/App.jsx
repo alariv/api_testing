@@ -593,7 +593,26 @@ function App() {
 																			: ''
 																	}`}
 																>
-																	{matchingLine?.milestone_over_odds ?? 'N/A'}
+																	<div className='milestone-odds-content'>
+																		<div className='milestone-odds-value'>
+																			{matchingLine?.milestone_over_odds ??
+																				'N/A'}
+																		</div>
+																		<div
+																			className={`milestone-settlement-circle ${
+																				matchingLine?.milestone_over_settlement ===
+																				'W'
+																					? 'win'
+																					: matchingLine?.milestone_over_settlement ===
+																					  'L'
+																					? 'loss'
+																					: 'neutral'
+																			}`}
+																		>
+																			{matchingLine?.milestone_over_settlement ??
+																				''}
+																		</div>
+																	</div>
 																</td>
 															);
 														})}
