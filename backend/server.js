@@ -306,14 +306,22 @@ app.post('/api/data', (req, res) => {
 	} else {
 		// Update request - update existing fixture data
 		if (!fixturesData) {
+			console.log(
+				`\n\n[${getTimestamp()}] api/data returned error: No existing fixture data to update`
+			);
 			return res
 				.status(400)
 				.json({ error: 'No existing fixture data to update' });
 		}
 
 		if (dataToUse.fixture_id !== fixturesData.fixture_id) {
+			console.log(
+				`\n\n[${getTimestamp()}] api/data returned error: No existing data to update for fixture_id: ${
+					dataToUse.fixture_id
+				}`
+			);
 			return res.status(400).json({
-				error: `No existing data to update for fixture_id ${dataToUse.fixture_id}`
+				error: `No existing data to update for fixture_id: ${dataToUse.fixture_id}`
 			});
 		}
 

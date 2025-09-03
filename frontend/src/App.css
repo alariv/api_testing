@@ -478,6 +478,13 @@ body {
   width: 100%;
 }
 
+.player-team-name {
+  font-size: 0.7rem;
+  display: flex;
+  justify-content: end;
+  color: #b4b4b4;
+}
+
 .message-content .json-container {
   background: white;
   padding: 8px;

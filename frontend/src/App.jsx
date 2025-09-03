@@ -304,7 +304,9 @@ function App() {
 				{/* Tab Content */}
 				{activeTab === 'balanced' && (
 					<div className='api-section'>
-						<h2>Balanced Lines - Player Statistics</h2>
+						<h2>
+							Balanced Lines - fixture id: {pushedMessages[0]?.fixture_id}
+						</h2>
 						<div className='player-table-container'>
 							{(() => {
 								// Find the most recent message with players data
@@ -346,85 +348,96 @@ function App() {
 											</tr>
 										</thead>
 										<tbody>
-											{playersArray.map((player, index) => (
-												<tr key={index}>
-													<td className='player-name'>
-														{player.player_name || 'N/A'}
-													</td>
-													<TableCell
-														player={player}
-														marketType='points'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='total_rebounds'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='assists'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='blocks'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='steals'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='turnovers'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='three_point_field_goal'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='pra'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='pr'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='pa'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='bs'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-													<TableCell
-														player={player}
-														marketType='ra'
-														getCurrentBalanceLine={getCurrentBalanceLine}
-														handleBalanceLineChange={handleBalanceLineChange}
-													/>
-												</tr>
-											))}
+											{playersArray
+												.sort((a, b) =>
+													a.player_team_name > b.player_team_name ? 0 : -1
+												)
+												.map((player, index) => (
+													<tr key={index}>
+														<td className='player-name'>
+															<div>
+																{player.player_name
+																	? `${player.player_name}`
+																	: 'N/A'}
+															</div>
+															{player?.player_team_name && (
+																<div className='player-team-name'>{`(${player.player_team_name})`}</div>
+															)}
+														</td>
+														<TableCell
+															player={player}
+															marketType='points'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='total_rebounds'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='assists'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='blocks'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='steals'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='turnovers'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='three_point_field_goal'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='pra'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='pr'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='pa'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='bs'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+														<TableCell
+															player={player}
+															marketType='ra'
+															getCurrentBalanceLine={getCurrentBalanceLine}
+															handleBalanceLineChange={handleBalanceLineChange}
+														/>
+													</tr>
+												))}
 										</tbody>
 									</table>
 								);
@@ -435,7 +448,7 @@ function App() {
 
 				{activeTab === 'milestones' && (
 					<div className='api-section'>
-						<h2>Milestones - Player Statistics</h2>
+						<h2>Milestones - fixture id: {pushedMessages[0]?.fixture_id}</h2>
 
 						{/* Market Type Tabs */}
 						<div className='market-tabs-navigation'>
