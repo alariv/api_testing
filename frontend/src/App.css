@@ -518,7 +518,7 @@ body {
 }
 
 .player-table td {
-  padding: 8px;
+  padding: 6px 4px;
   text-align: center;
   border-bottom: 1px solid #e9ecef;
   font-size: 0.9rem;
