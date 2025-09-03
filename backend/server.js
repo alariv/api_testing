@@ -20,6 +20,11 @@ const PORT = process.env.PORT || 3001;
 // Store SSE clients
 const sseClients = new Set();
 
+
+const getMockJson = (update) => (update ? mockJson3 : mockJson);
+
+let fixturesData = null;
+
 // Timestamp function for logs
 function getTimestamp() {
 	const now = new Date();
@@ -83,6 +88,8 @@ app.get('/api/events', (req, res) => {
 	req.socket.on('close', cleanup);
 	req.socket.on('error', cleanup);
 	req.socket.on('end', cleanup);
+
+	fixturesData && broadcastToAll(fixturesData);
 
 	// Keep connection alive
 	const keepAlive = setInterval(() => {
@@ -172,18 +179,27 @@ app.get('/api/hello', (req, res) => {
 	res.json({ message: 'Hello from the backend!' });
 });
 
-const getMockJson = (update) => (update ? mockJson3 : mockJson);
-
-let fixturesData = null;
 app.post('/api/data', (req, res) => {
-	console.log(
-		`[${getTimestamp()}] api/data received data: ${JSON.stringify(req.body)}`
-	);
 	// Forward the exact request body to all connected clients
 	// broadcastToAll(req.body);
 	const isUpdateReq = !!req.body?.player_id;
 	const dataToUse = mock ? getMockJson(isUpdateReq) : req.body;
+
 	console.log(`[${getTimestamp()}] isUpdateReq`, isUpdateReq);
+
+	if (isUpdateReq) {
+		console.log(
+			`\n\n[${getTimestamp()}] api/data received UPDATE DATA: ${JSON.stringify(
+				req.body
+			)}`
+		);
+	} else {
+		console.log(
+			`\n\n[${getTimestamp()}] api/data received FULL DATA: ${JSON.stringify(
+				req.body
+			)}`
+		);
+	}
 
 	if (!isUpdateReq) {
 		// Initial data - create new fixture data
@@ -293,6 +309,12 @@ app.post('/api/data', (req, res) => {
 			return res
 				.status(400)
 				.json({ error: 'No existing fixture data to update' });
+		}
+
+		if (dataToUse.fixture_id !== fixturesData.fixture_id) {
+			return res.status(400).json({
+				error: `No existing data to update for fixture_id ${dataToUse.fixture_id}`
+			});
 		}
 
 		console.log(
