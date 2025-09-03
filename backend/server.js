@@ -20,6 +20,17 @@ const PORT = process.env.PORT || 3001;
 // Store SSE clients
 const sseClients = new Set();
 
+// Timestamp function for logs
+function getTimestamp() {
+	const now = new Date();
+	const day = String(now.getDate()).padStart(2, '0');
+	const month = String(now.getMonth() + 1).padStart(2, '0');
+	const hours = String(now.getHours()).padStart(2, '0');
+	const minutes = String(now.getMinutes()).padStart(2, '0');
+	const seconds = String(now.getSeconds()).padStart(2, '0');
+	return `${day}/${month} ${hours}:${minutes}:${seconds}`;
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '25mb' }));
@@ -50,14 +61,22 @@ app.get('/api/events', (req, res) => {
 	const client = { id: clientId, res, connected: true };
 	sseClients.add(client);
 
-	console.log(`SSE client connected. Total clients: ${sseClients.size}`);
+	console.log(
+		`[${getTimestamp()}] SSE client connected. Total clients: ${
+			sseClients.size
+		}`
+	);
 
 	// Handle client disconnect more reliably
 	const cleanup = () => {
 		if (client.connected) {
 			client.connected = false;
 			sseClients.delete(client);
-			console.log(`SSE client disconnected. Total clients: ${sseClients.size}`);
+			console.log(
+				`[${getTimestamp()}] SSE client disconnected. Total clients: ${
+					sseClients.size
+				}`
+			);
 		}
 	};
 
@@ -81,7 +100,7 @@ app.get('/api/events', (req, res) => {
 
 // WebSocket connection handling
 wss.on('connection', (ws) => {
-	console.log('New WebSocket connection established');
+	console.log(`[${getTimestamp()}] New WebSocket connection established`);
 
 	// Send welcome message to new client
 	ws.send(
@@ -96,7 +115,7 @@ wss.on('connection', (ws) => {
 	ws.on('message', (message) => {
 		try {
 			const data = JSON.parse(message);
-			console.log('Received message:', data);
+			console.log(`[${getTimestamp()}] Received message:`, data);
 
 			// Echo the message back to all connected clients
 			wss.clients.forEach((client) => {
@@ -111,17 +130,20 @@ wss.on('connection', (ws) => {
 				}
 			});
 		} catch (error) {
-			console.error('Error parsing WebSocket message:', error);
+			console.error(
+				`[${getTimestamp()}] Error parsing WebSocket message:`,
+				error
+			);
 		}
 	});
 
 	// Handle client disconnect
 	ws.on('close', () => {
-		console.log('WebSocket connection closed');
+		console.log(`[${getTimestamp()}] WebSocket connection closed`);
 	});
 
 	ws.onerror = (error) => {
-		console.error('WebSocket error:', error);
+		console.error(`[${getTimestamp()}] WebSocket error:`, error);
 	};
 });
 
@@ -154,16 +176,14 @@ const getMockJson = (update) => (update ? mockJson3 : mockJson);
 
 let fixturesData = null;
 app.post('/api/data', (req, res) => {
-	console.log(`api/data received data: ${JSON.stringify(req.body)}`);
+	console.log(
+		`[${getTimestamp()}] api/data received data: ${JSON.stringify(req.body)}`
+	);
 	// Forward the exact request body to all connected clients
 	// broadcastToAll(req.body);
 	const isUpdateReq = !!req.body?.player_id;
 	const dataToUse = mock ? getMockJson(isUpdateReq) : req.body;
-	console.log(
-		`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
-			'] isUpdateReq',
-		isUpdateReq
-	);
+	console.log(`[${getTimestamp()}] isUpdateReq`, isUpdateReq);
 
 	if (!isUpdateReq) {
 		// Initial data - create new fixture data
@@ -181,7 +201,11 @@ app.post('/api/data', (req, res) => {
 				(playerId) => playerId == playerMarket.player_id
 			);
 			!matched &&
-				console.log('matched', matched, playerMarket?.balance_line_over_odds);
+				console.log(
+					`[${getTimestamp()}] matched`,
+					matched,
+					playerMarket?.balance_line_over_odds
+				);
 
 			const marketObj = {
 				balance_line: playerMarket?.balance_line,
@@ -272,8 +296,7 @@ app.post('/api/data', (req, res) => {
 		}
 
 		console.log(
-			`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
-				'] fixturesData length when update req',
+			`[${getTimestamp()}] fixturesData length when update req`,
 			Object.keys(fixturesData.players).length
 		);
 
@@ -294,7 +317,9 @@ app.post('/api/data', (req, res) => {
 				const marketType = dataToUse?.lines[0]?.market_type;
 
 				console.log(
-					`Updating player ${dataToUse?.player_id}, market ${marketType} with ${dataToUse?.lines.length} lines`
+					`[${getTimestamp()}] Updating player ${
+						dataToUse?.player_id
+					}, market ${marketType} with ${dataToUse?.lines.length} lines`
 				);
 
 				if (marketType) {
@@ -367,7 +392,9 @@ app.post('/api/data', (req, res) => {
 					});
 
 					console.log(
-						`Updated player ${dataToUse?.player_id}, market ${marketType}. New balance lines:`,
+						`[${getTimestamp()}] Updated player ${
+							dataToUse?.player_id
+						}, market ${marketType}. New balance lines:`,
 						Object.keys(player.markets[marketType])
 					);
 				}
@@ -378,9 +405,8 @@ app.post('/api/data', (req, res) => {
 	}
 
 	console.log(
-		`[${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}` +
-			'] fixturesData.leng',
-		fixturesData?.players?.length
+		`[${getTimestamp()}] fixturesData.length`,
+		Object.keys(fixturesData?.players || {}).length
 	);
 
 	res.json({
@@ -428,11 +454,16 @@ app.get('*', (req, res) => {
 
 // Start server
 server.listen(PORT, () => {
-	console.log(`Server is running on port ${PORT}`);
-	console.log(`Server URL: http://localhost:${PORT}`);
-	console.log(`WebSocket URL: ws://localhost:${PORT}`);
-	console.log(`SSE URL: http://localhost:${PORT}/api/events`);
+	console.log(`[${getTimestamp()}] Server is running on port ${PORT}`);
+	console.log(`[${getTimestamp()}] Server URL: http://localhost:${PORT}`);
+	console.log(`[${getTimestamp()}] WebSocket URL: ws://localhost:${PORT}`);
 	console.log(
-		`Frontend served from: ${path.join(__dirname, '../frontend/dist')}`
+		`[${getTimestamp()}] SSE URL: http://localhost:${PORT}/api/events`
+	);
+	console.log(
+		`[${getTimestamp()}] Frontend served from: ${path.join(
+			__dirname,
+			'../frontend/dist'
+		)}`
 	);
 });
