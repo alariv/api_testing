@@ -360,9 +360,9 @@ function App() {
 																	? `${player.player_name}`
 																	: 'N/A'}
 															</div>
-															{player?.player_team_name && (
+															{player?.player_team_name ? (
 																<div className='player-team-name'>{`(${player.player_team_name})`}</div>
-															)}
+															) : null}
 														</td>
 														<TableCell
 															player={player}
@@ -551,7 +551,14 @@ function App() {
 													return (
 														<tr key={`${player.player_id}-no-data`}>
 															<td className='player-name'>
-																{player.player_name || 'N/A'}
+																<div>
+																	{player.player_name
+																		? `${player.player_name}`
+																		: 'N/A'}
+																</div>
+																{player?.player_team_name && (
+																	<div className='player-team-name'>{`(${player.player_team_name})`}</div>
+																)}
 															</td>
 															{sortedMilestoneLines.map(() => (
 																<td
@@ -585,7 +592,14 @@ function App() {
 																hasSuspendedMilestone ? 'suspended' : ''
 															}`}
 														>
-															{player.player_name || 'N/A'}
+															<div>
+																{player.player_name
+																	? `${player.player_name}`
+																	: 'N/A'}
+															</div>
+															{player?.player_team_name ? (
+																<div className='player-team-name'>{`(${player.player_team_name})`}</div>
+															) : null}
 														</td>
 														{sortedMilestoneLines.map((milestoneLine) => {
 															// Find the line data that matches this milestone line
