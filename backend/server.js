@@ -8,22 +8,26 @@ const { mockJson } = require('../../mock.js');
 const { mockJson2 } = require('../../mock2.js');
 const { mockJson3 } = require('../../mock3.js');
 const { mockUpdateJson } = require('../../mockUpdateJson.js');
+const { specialsMock } = require('../../specialsMock.js');
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 const mock =
-	process.env.NODE_ENV === 'production' ? false : process.env.MOCK ?? false;
+	process.env.NODE_ENV === 'production' ? false : process.env.MOCK ?? true;
 const PORT = process.env.PORT || 3001;
 
 // Store SSE clients
 const sseClients = new Set();
 
-
-const getMockJson = (update) => (update ? mockJson3 : mockJson);
+const getMockJson = (update, isSpecials) => {
+	if (isSpecials) return specialsMock;
+	return update ? mockJson3 : mockJson;
+};
 
 let fixturesData = null;
+let specialsData = null;
 
 // Timestamp function for logs
 function getTimestamp() {
@@ -89,7 +93,13 @@ app.get('/api/events', (req, res) => {
 	req.socket.on('error', cleanup);
 	req.socket.on('end', cleanup);
 
-	fixturesData && broadcastToAll(fixturesData);
+	// Send existing data to new SSE client
+	if (fixturesData) {
+		broadcastToAll(fixturesData);
+	}
+	if (specialsData) {
+		broadcastToAll(specialsData);
+	}
 
 	// Keep connection alive
 	const keepAlive = setInterval(() => {
@@ -183,13 +193,22 @@ app.post('/api/data', (req, res) => {
 	// Forward the exact request body to all connected clients
 	// broadcastToAll(req.body);
 	const isUpdateReq = !!req.body?.player_id;
-	const dataToUse = mock ? getMockJson(isUpdateReq) : req.body;
+	const isSpecialsReq = !!req.body?.specials;
+	const dataToUse = mock ? getMockJson(isUpdateReq, isSpecialsReq) : req.body;
 
-	console.log(`[${getTimestamp()}] isUpdateReq`, isUpdateReq);
+	console.log(
+		`[${getTimestamp()}] isUpdateReq: ${isUpdateReq}, isSpecialsReq: ${isSpecialsReq}`
+	);
 
 	if (isUpdateReq) {
 		console.log(
 			`\n\n[${getTimestamp()}] api/data received UPDATE DATA: ${JSON.stringify(
+				req.body
+			)}`
+		);
+	} else if (isSpecialsReq) {
+		console.log(
+			`\n\n[${getTimestamp()}] api/data received SPECIALS DATA: ${JSON.stringify(
 				req.body
 			)}`
 		);
@@ -201,7 +220,27 @@ app.post('/api/data', (req, res) => {
 		);
 	}
 
-	if (!isUpdateReq) {
+	// Handle specials-only requests first
+	if (isSpecialsReq && !isUpdateReq && !dataToUse?.player_lines) {
+		// This is a specials-only request
+		const specialsDataToSend = {
+			fixture_id: dataToUse.fixture_id,
+			specials: dataToUse.specials,
+			isSpecials: true,
+			specialsMessageId: dataToUse?.messageId || Date.now().toString()
+		};
+
+		// Store specials data for future SSE connections
+		specialsData = specialsDataToSend;
+
+		console.log(
+			`[${getTimestamp()}] Processing specials-only data for fixture ${
+				dataToUse.fixture_id
+			} with ${dataToUse.specials.length} specials`
+		);
+
+		broadcastToAll(specialsDataToSend);
+	} else if (!isUpdateReq) {
 		// Initial data - create new fixture data
 		const data = {
 			fixture_id: dataToUse?.fixture_id,
@@ -301,6 +340,19 @@ app.post('/api/data', (req, res) => {
 					? dataToUse?.player_lines.length
 					: 0
 		};
+
+		// Include specials if present in full data
+		if (dataToUse?.specials) {
+			initialData.specials = dataToUse.specials;
+			initialData.isSpecials = true;
+			// Store specials data for future SSE connections
+			specialsData = {
+				fixture_id: dataToUse.fixture_id,
+				specials: dataToUse.specials,
+				isSpecials: true,
+				specialsMessageId: dataToUse?.messageId || Date.now().toString()
+			};
+		}
 
 		broadcastToAll(initialData);
 	} else {
@@ -431,7 +483,45 @@ app.post('/api/data', (req, res) => {
 			}
 		}
 
+		// Include specials if present in update data
+		if (dataToUse?.specials) {
+			updateData.specials = dataToUse.specials;
+			updateData.isSpecials = true;
+			// Store specials data for future SSE connections
+			specialsData = {
+				fixture_id: dataToUse.fixture_id,
+				specials: dataToUse.specials,
+				isSpecials: true,
+				specialsMessageId: dataToUse?.messageId || Date.now().toString()
+			};
+		}
+
 		broadcastToAll(updateData);
+	}
+
+	// Handle specials data that comes with other requests (not standalone)
+	if (
+		isSpecialsReq &&
+		dataToUse?.specials &&
+		(isUpdateReq || dataToUse?.player_lines)
+	) {
+		const specialsDataToSend = {
+			fixture_id: dataToUse.fixture_id,
+			specials: dataToUse.specials,
+			isSpecials: true,
+			specialsMessageId: dataToUse?.messageId || Date.now().toString()
+		};
+
+		// Store specials data for future SSE connections
+		specialsData = specialsDataToSend;
+
+		console.log(
+			`[${getTimestamp()}] Processing specials data with other data for fixture ${
+				dataToUse.fixture_id
+			} with ${dataToUse.specials.length} specials`
+		);
+
+		broadcastToAll(specialsDataToSend);
 	}
 
 	console.log(
@@ -473,6 +563,31 @@ app.post('/api/push', (req, res) => {
 	res.json({
 		success: true,
 		message: 'Data pushed to all connected clients',
+		timestamp: new Date().toISOString()
+	});
+});
+
+// Clear data endpoint
+app.post('/api/clear', (req, res) => {
+	console.log(`[${getTimestamp()}] Clearing fixturesData and specialsData`);
+
+	// Clear the stored data
+	fixturesData = null;
+	specialsData = null;
+
+	// Broadcast clear message to all connected clients
+	const clearMessage = {
+		message: 'Data cleared',
+		type: 'data_cleared',
+		timestamp: new Date().toISOString(),
+		cleared: true
+	};
+
+	broadcastToAll(clearMessage);
+
+	res.json({
+		success: true,
+		message: 'Data cleared successfully',
 		timestamp: new Date().toISOString()
 	});
 });

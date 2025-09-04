@@ -29,10 +29,19 @@ body {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   padding: 1rem;
-  text-align: center;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
 }
 
 .app-header h1 {
@@ -64,6 +73,42 @@ body {
 .ws-status:has(🔴) {
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
+}
+
+/* Clear data button */
+.clear-data-button {
+  background: #fecaca;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #dc2626;
+  min-width: auto;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-data-button:hover:not(:disabled) {
+  background: #fca5a5;
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
+.clear-data-button:active:not(:disabled) {
+  transform: translateY(0);
+  background: #f87171;
+}
+
+.clear-data-button:disabled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
 }
 
 .connection-count {
@@ -736,6 +781,238 @@ body {
 
 .milestone-settlement-circle.neutral {
   background: #6b728014;
+}
+
+/* Specials Tab Styling */
+.specials-container {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.specials-info {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #8b5cf6;
+}
+
+.specials-info p {
+  margin: 8px 0;
+  color: #374151;
+}
+
+.specials-info strong {
+  color: #1f2937;
+}
+
+.specials-data {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.specials-data h3 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.specials-json {
+  background: #f3f4f6;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #374151;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.no-specials {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Specials Accordions */
+.specials-accordions {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* Tablet: Two accordions per row */
+@media (min-width: 768px) {
+  .specials-accordions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Desktop: Two accordions per row */
+@media (min-width: 1024px) {
+  .specials-accordions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.accordion {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.accordion-header {
+  width: 100%;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  transition: background-color 0.2s ease;
+}
+
+.accordion-header:hover {
+  background: #e5e7eb;
+}
+
+.market-type-name {
+  text-align: left;
+}
+
+.accordion-count {
+  color: #6b7280;
+  font-weight: 500;
+  margin-right: 8px;
+  font-size: 12px;
+}
+
+.accordion-arrow {
+  transition: transform 0.2s ease;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.accordion-arrow.open {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  padding: 0;
+  background: white;
+  overflow-x: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Specials Table */
+.specials-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.specials-table th {
+  background: #f8f9fa;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.specials-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.selection-row:hover {
+  background: #f9fafb;
+}
+
+.selection-row:last-child td {
+  border-bottom: none;
+}
+
+.selection-name {
+  font-weight: 600;
+  color: #1f2937;
+  min-width: 80px;
+  font-size: 12px;
+}
+
+.odds, .probability {
+  color: #1f2937;
+  text-align: center;
+  min-width: 60px;
+  font-size: 11px;
+}
+
+.status, .suspended {
+  text-align: center;
+  min-width: 70px;
+}
+
+.status-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.closed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-badge.open {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.suspended-badge {
+  background: #fef3c7;
+  color: #d97706;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.active-badge {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
 }
 
 .milestone-odds.suspended {
