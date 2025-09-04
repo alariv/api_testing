@@ -300,12 +300,13 @@ function App() {
 						console.log(`Received data with ${data.new_lines} lines`);
 					}
 
-					// Check if this is specials data
+					// Check if this is specials data (but don't use else if, as message might contain both)
 					if (data.isSpecials && data.specials) {
 						setSpecialsData(data);
 					}
+
 					// Check if this is an update message
-					else if (data.isUpdate && data.players) {
+					if (data.isUpdate && data.players) {
 						// This is an update - merge with existing data
 						setPushedMessages((prevMessages) => {
 							const existingMessage = prevMessages.find(
@@ -349,8 +350,8 @@ function App() {
 								];
 							}
 						});
-					} else {
-						// Regular message - add to messages
+					} else if (data.players) {
+						// Regular message with players data - add to messages
 						const newMessage = {
 							...data,
 							timestamp: new Date().toISOString(),
@@ -714,19 +715,24 @@ function App() {
 																				{matchingLine?.milestone_over_odds ??
 																					'N/A'}
 																			</div>
-																			<div
-																				className={`milestone-settlement-circle ${
-																					matchingLine?.milestone_over_settlement ===
-																					'W'
-																						? 'win'
-																						: matchingLine?.milestone_over_settlement ===
-																						  'L'
-																						? 'loss'
-																						: 'neutral'
-																				}`}
-																			>
-																				{matchingLine?.milestone_over_settlement ??
-																					''}
+																			<div className='milestone-settlements'>
+																				<div
+																					className={`milestone-settlement-circle ${
+																						matchingLine?.milestone_over_settlement ===
+																						'W'
+																							? 'win'
+																							: matchingLine?.milestone_over_settlement ===
+																							  'L'
+																							? 'loss'
+																							: 'neutral'
+																					}`}
+																					title={`Milestone over settlement: ${
+																						matchingLine?.milestone_over_settlement ||
+																						'N/A'
+																					}`}
+																				>
+																					{matchingLine?.settlement_value ?? ''}
+																				</div>
 																			</div>
 																		</div>
 																	</td>

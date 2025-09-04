@@ -4,7 +4,8 @@ const http = require('http');
 const WebSocket = require('ws');
 const path = require('path');
 require('dotenv').config();
-const { mockJson } = require('../../mock.js');
+// const { mockJson } = require('../../mock.js');
+const { mockJson } = require('../../massivemock.js');
 const { mockJson2 } = require('../../mock2.js');
 const { mockJson3 } = require('../../mock3.js');
 const { mockUpdateJson } = require('../../mockUpdateJson.js');
@@ -278,7 +279,13 @@ app.post('/api/data', (req, res) => {
 				milestone_line: playerMarket?.milestone_line,
 				milestone_suspended: playerMarket?.milestone_suspended,
 				milestone_over_odds: playerMarket?.milestone_over_odds,
-				milestone_under_odds: playerMarket?.milestone_under_odds
+				milestone_under_odds: playerMarket?.milestone_under_odds,
+				balance_line_under_settlement:
+					playerMarket?.balance_line_under_settlement,
+				milestone_over_settlement: playerMarket?.milestone_over_settlement,
+				balance_line_over_settlement:
+					playerMarket?.balance_line_over_settlement,
+				settlement_value: playerMarket?.settlement_value
 			};
 
 			if (!matched) {
