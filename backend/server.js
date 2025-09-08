@@ -225,7 +225,7 @@ app.post('/api/data', (req, res) => {
 	if (isSpecialsReq && !isUpdateReq && !dataToUse?.player_lines) {
 		// This is a specials-only request
 		const specialsDataToSend = {
-			fixture_id: dataToUse.fixture_id,
+			fixture_id: parseInt(dataToUse.fixture_id),
 			specials: dataToUse.specials,
 			isSpecials: true,
 			specialsMessageId: dataToUse?.messageId || Date.now().toString()
@@ -244,7 +244,7 @@ app.post('/api/data', (req, res) => {
 	} else if (!isUpdateReq) {
 		// Initial data - create new fixture data
 		const data = {
-			fixture_id: dataToUse?.fixture_id,
+			fixture_id: parseInt(dataToUse?.fixture_id),
 			players: {},
 			isNew: dataToUse?.isNew,
 			messageId: dataToUse?.messageId
@@ -293,7 +293,7 @@ app.post('/api/data', (req, res) => {
 					away_team_id: playerMarket?.away_team_id,
 					away_team_name: playerMarket?.away_team_name,
 					created_at: playerMarket?.created_at,
-					fixture_id: playerMarket?.fixture_id,
+					fixture_id: parseInt(playerMarket?.fixture_id),
 					fixture_suspension: playerMarket?.fixture_suspension,
 					game_date: playerMarket?.game_date,
 					home_team_id: playerMarket?.home_team_id,
@@ -354,7 +354,7 @@ app.post('/api/data', (req, res) => {
 			initialData.isSpecials = true;
 			// Store specials data for future SSE connections
 			specialsData = {
-				fixture_id: dataToUse.fixture_id,
+				fixture_id: parseInt(dataToUse.fixture_id),
 				specials: dataToUse.specials,
 				isSpecials: true,
 				specialsMessageId: dataToUse?.messageId || Date.now().toString()
@@ -373,7 +373,7 @@ app.post('/api/data', (req, res) => {
 				.json({ error: 'No existing fixture data to update' });
 		}
 
-		if (dataToUse.fixture_id !== fixturesData.fixture_id) {
+		if (parseInt(dataToUse.fixture_id) !== parseInt(fixturesData.fixture_id)) {
 			console.log(
 				`\n\n[${getTimestamp()}] api/data returned error: No existing data to update for fixture_id: ${
 					dataToUse.fixture_id
@@ -437,7 +437,7 @@ app.post('/api/data', (req, res) => {
 
 							player.markets[marketType][balanceLine] = {
 								id: lineData?.id,
-								fixture_id: lineData?.fixture_id,
+								fixture_id: parseInt(lineData?.fixture_id),
 								player_id: lineData?.player_id,
 								sample_count: lineData?.sample_count,
 								reliability: lineData?.reliability,
@@ -498,7 +498,7 @@ app.post('/api/data', (req, res) => {
 			updateData.isSpecials = true;
 			// Store specials data for future SSE connections
 			specialsData = {
-				fixture_id: dataToUse.fixture_id,
+				fixture_id: parseInt(dataToUse.fixture_id),
 				specials: dataToUse.specials,
 				isSpecials: true,
 				specialsMessageId: dataToUse?.messageId || Date.now().toString()
@@ -515,7 +515,7 @@ app.post('/api/data', (req, res) => {
 		(isUpdateReq || dataToUse?.player_lines)
 	) {
 		const specialsDataToSend = {
-			fixture_id: dataToUse.fixture_id,
+			fixture_id: parseInt(dataToUse.fixture_id),
 			specials: dataToUse.specials,
 			isSpecials: true,
 			specialsMessageId: dataToUse?.messageId || Date.now().toString()
