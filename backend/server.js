@@ -377,7 +377,9 @@ app.post('/api/data', (req, res) => {
 			console.log(
 				`\n\n[${getTimestamp()}] api/data returned error: No existing data to update for fixture_id: ${
 					dataToUse.fixture_id
-				} !== ${fixturesData.fixture_id}\n\n`
+				}:${typeof dataToUse.fixture_id} !== ${
+					fixturesData.fixture_id
+				}:${typeof fixturesData.fixture_id}\n\n`
 			);
 			return res.status(400).json({
 				error: `No existing data to update for fixture_id: ${dataToUse.fixture_id}`
