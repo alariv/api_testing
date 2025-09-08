@@ -266,72 +266,160 @@ function App() {
 		while (updateQueueRef.current.length > 0) {
 			const data = updateQueueRef.current.shift();
 
-			// Process the update
+			// Process the update with better error handling
 			await new Promise((resolve) => {
 				setPushedMessages((prevMessages) => {
-					if (data.isUpdate && data.players) {
-						// Update existing message
-						const existingMessage = prevMessages.find(
-							(msg) => msg.players && !msg.isUpdate
-						);
-
-						if (existingMessage) {
-							const updatedMessage = {
-								...data,
-								timestamp: new Date().toISOString()
-							};
-
-							// Reset balance line selections when update is received
-							setBalanceLines({});
-
-							// Check if update message also contains specials data
-							if (data.specials) {
-								setSpecialsData({
-									fixture_id: data.fixture_id,
-									specials: data.specials,
-									isSpecials: true,
-									specialsMessageId: data.messageId || Date.now().toString()
-								});
-							}
-
-							const newMessages = prevMessages.map((msg) =>
-								msg.players && !msg.isUpdate ? updatedMessage : msg
+					try {
+						if (data.isUpdate && data.players) {
+							// Update existing message - find the most recent message (could be full data or previously updated data)
+							const existingMessage = prevMessages.find(
+								(msg) => msg.players && msg.fixture_id === data.fixture_id
 							);
-							resolve();
-							return newMessages;
-						} else {
-							const newMessages = [
-								{
+
+							if (existingMessage) {
+								// Check if there are actual changes before updating
+								const hasPlayerChanges =
+									JSON.stringify(existingMessage.players) !==
+									JSON.stringify(data.players);
+								const hasSpecialsChanges =
+									data.specials &&
+									JSON.stringify(existingMessage.specials) !==
+										JSON.stringify(data.specials);
+								const hasOtherChanges =
+									existingMessage.fixture_id !== data.fixture_id ||
+									existingMessage.messageId !== data.messageId;
+
+								// Only update if there are actual changes
+								if (hasPlayerChanges || hasSpecialsChanges || hasOtherChanges) {
+									// Deep merge to ensure all updates are preserved
+									const updatedMessage = {
+										...existingMessage,
+										...data,
+										players: {
+											...existingMessage.players,
+											...data.players
+										},
+										timestamp: new Date().toISOString(),
+										lastUpdated: Date.now()
+									};
+
+									// Reset balance line selections when update is received
+									setBalanceLines({});
+
+									// Check if update message also contains specials data
+									if (data.specials) {
+										setSpecialsData({
+											fixture_id: data.fixture_id,
+											specials: data.specials,
+											isSpecials: true,
+											specialsMessageId: data.messageId || Date.now().toString()
+										});
+									}
+
+									const newMessages = prevMessages.map((msg) =>
+										msg.players && msg.fixture_id === data.fixture_id
+											? updatedMessage
+											: msg
+									);
+									resolve();
+									return newMessages;
+								} else {
+									// No changes detected, return existing state
+									resolve();
+									return prevMessages;
+								}
+							} else {
+								// No existing message, add as new
+								const newMessages = [
+									{
+										...data,
+										timestamp: new Date().toISOString(),
+										lastUpdated: Date.now()
+									},
+									...prevMessages
+								];
+								resolve();
+								return newMessages;
+							}
+						} else if (data.players) {
+							// Regular message with players data
+							// Check if this is a duplicate of existing data
+							const existingMessage = prevMessages.find(
+								(msg) => msg.players && msg.fixture_id === data.fixture_id
+							);
+
+							if (existingMessage) {
+								// Check if there are actual changes
+								const hasPlayerChanges =
+									JSON.stringify(existingMessage.players) !==
+									JSON.stringify(data.players);
+								const hasSpecialsChanges =
+									data.specials &&
+									JSON.stringify(existingMessage.specials) !==
+										JSON.stringify(data.specials);
+
+								if (hasPlayerChanges || hasSpecialsChanges) {
+									// Full data replaces existing data (becomes new base)
+									const newMessage = {
+										...data,
+										timestamp: new Date().toISOString(),
+										isNew: true,
+										messageId: data.messageId || Date.now().toString(),
+										lastUpdated: Date.now()
+									};
+
+									// Check if regular message also contains specials data
+									if (data.specials) {
+										setSpecialsData({
+											fixture_id: data.fixture_id,
+											specials: data.specials,
+											isSpecials: true,
+											specialsMessageId: data.messageId || Date.now().toString()
+										});
+									}
+
+									// Replace the existing message with new full data
+									const newMessages = prevMessages.map((msg) =>
+										msg.players && msg.fixture_id === data.fixture_id
+											? newMessage
+											: msg
+									);
+									resolve();
+									return newMessages;
+								} else {
+									// No changes, return existing state
+									resolve();
+									return prevMessages;
+								}
+							} else {
+								// New message, add it
+								const newMessage = {
 									...data,
-									timestamp: new Date().toISOString()
-								},
-								...prevMessages
-							];
+									timestamp: new Date().toISOString(),
+									isNew: true,
+									messageId: data.messageId || Date.now().toString(),
+									lastUpdated: Date.now()
+								};
+
+								// Check if regular message also contains specials data
+								if (data.specials) {
+									setSpecialsData({
+										fixture_id: data.fixture_id,
+										specials: data.specials,
+										isSpecials: true,
+										specialsMessageId: data.messageId || Date.now().toString()
+									});
+								}
+
+								resolve();
+								return [newMessage, ...prevMessages];
+							}
+						} else {
 							resolve();
-							return newMessages;
+							return prevMessages;
 						}
-					} else if (data.players) {
-						// Regular message with players data
-						const newMessage = {
-							...data,
-							timestamp: new Date().toISOString(),
-							isNew: true,
-							messageId: data.messageId || Date.now().toString()
-						};
-
-						// Check if regular message also contains specials data
-						if (data.specials) {
-							setSpecialsData({
-								fixture_id: data.fixture_id,
-								specials: data.specials,
-								isSpecials: true,
-								specialsMessageId: data.messageId || Date.now().toString()
-							});
-						}
-
-						resolve();
-						return [newMessage, ...prevMessages];
-					} else {
+					} catch (error) {
+						console.error('Error processing update:', error);
 						resolve();
 						return prevMessages;
 					}
@@ -399,7 +487,26 @@ function App() {
 
 					// Queue player data updates to prevent state conflicts from rapid updates
 					if (data.players) {
-						updateQueueRef.current.push(data);
+						// Add timestamp to track update order
+						const updateWithTimestamp = {
+							...data,
+							queueTimestamp: Date.now()
+						};
+
+						// Remove any older updates for the same player/market to prevent conflicts
+						if (data.isUpdate && data.player_id) {
+							updateQueueRef.current = updateQueueRef.current.filter(
+								(queuedUpdate) =>
+									!(
+										queuedUpdate.isUpdate &&
+										queuedUpdate.player_id === data.player_id &&
+										queuedUpdate.queueTimestamp <
+											updateWithTimestamp.queueTimestamp
+									)
+							);
+						}
+
+						updateQueueRef.current.push(updateWithTimestamp);
 						processUpdateQueue();
 					}
 
