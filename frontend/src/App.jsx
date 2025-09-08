@@ -24,6 +24,8 @@ function App() {
 	const [specialsData, setSpecialsData] = useState(null); // Store specials data
 	const [openAccordions, setOpenAccordions] = useState({}); // Track which accordions are open
 	const eventSourceRef = useRef(null);
+	const updateQueueRef = useRef([]); // Queue for handling rapid updates
+	const isProcessingUpdatesRef = useRef(false); // Flag to prevent concurrent processing
 
 	// Memoized calculations for performance
 	const latestMessage = useMemo(() => {
@@ -253,6 +255,96 @@ function App() {
 		[balanceLines, latestMessage]
 	);
 
+	// Function to process updates sequentially to prevent state conflicts
+	const processUpdateQueue = useCallback(async () => {
+		if (isProcessingUpdatesRef.current || updateQueueRef.current.length === 0) {
+			return;
+		}
+
+		isProcessingUpdatesRef.current = true;
+
+		while (updateQueueRef.current.length > 0) {
+			const data = updateQueueRef.current.shift();
+
+			// Process the update
+			await new Promise((resolve) => {
+				setPushedMessages((prevMessages) => {
+					if (data.isUpdate && data.players) {
+						// Update existing message
+						const existingMessage = prevMessages.find(
+							(msg) => msg.players && !msg.isUpdate
+						);
+
+						if (existingMessage) {
+							const updatedMessage = {
+								...data,
+								timestamp: new Date().toISOString()
+							};
+
+							// Reset balance line selections when update is received
+							setBalanceLines({});
+
+							// Check if update message also contains specials data
+							if (data.specials) {
+								setSpecialsData({
+									fixture_id: data.fixture_id,
+									specials: data.specials,
+									isSpecials: true,
+									specialsMessageId: data.messageId || Date.now().toString()
+								});
+							}
+
+							const newMessages = prevMessages.map((msg) =>
+								msg.players && !msg.isUpdate ? updatedMessage : msg
+							);
+							resolve();
+							return newMessages;
+						} else {
+							const newMessages = [
+								{
+									...data,
+									timestamp: new Date().toISOString()
+								},
+								...prevMessages
+							];
+							resolve();
+							return newMessages;
+						}
+					} else if (data.players) {
+						// Regular message with players data
+						const newMessage = {
+							...data,
+							timestamp: new Date().toISOString(),
+							isNew: true,
+							messageId: data.messageId || Date.now().toString()
+						};
+
+						// Check if regular message also contains specials data
+						if (data.specials) {
+							setSpecialsData({
+								fixture_id: data.fixture_id,
+								specials: data.specials,
+								isSpecials: true,
+								specialsMessageId: data.messageId || Date.now().toString()
+							});
+						}
+
+						resolve();
+						return [newMessage, ...prevMessages];
+					} else {
+						resolve();
+						return prevMessages;
+					}
+				});
+			});
+
+			// Small delay to prevent overwhelming the UI
+			await new Promise((resolve) => setTimeout(resolve, 10));
+		}
+
+		isProcessingUpdatesRef.current = false;
+	}, []);
+
 	// Function to clear data on backend
 	const handleClearData = async () => {
 		try {
@@ -264,8 +356,7 @@ function App() {
 			});
 
 			if (response.ok) {
-				const result = await response.json();
-				console.log('Data cleared successfully:', result);
+				await response.json();
 
 				// Clear frontend state
 				setPushedMessages([]);
@@ -295,6 +386,7 @@ function App() {
 			eventSource.onmessage = (event) => {
 				try {
 					const data = JSON.parse(event.data);
+
 					// Log new_lines value if present
 					if (data.new_lines !== undefined) {
 						console.log(`Received data with ${data.new_lines} lines`);
@@ -305,73 +397,10 @@ function App() {
 						setSpecialsData(data);
 					}
 
-					// Check if this is an update message
-					if (data.isUpdate && data.players) {
-						// This is an update - merge with existing data
-						setPushedMessages((prevMessages) => {
-							const existingMessage = prevMessages.find(
-								(msg) => msg.players && !msg.isUpdate
-							);
-
-							if (existingMessage) {
-								// Update the existing message with new data
-								// Backend sends complete updated data, so replace the entire message
-								const updatedMessage = {
-									...data,
-									timestamp: new Date().toISOString()
-								};
-
-								// Reset balance line selections when update is received
-								// This ensures the new balanced line is displayed
-								setBalanceLines({});
-
-								// Check if update message also contains specials data
-								if (data.specials) {
-									setSpecialsData({
-										fixture_id: data.fixture_id,
-										specials: data.specials,
-										isSpecials: true,
-										specialsMessageId: data.messageId || Date.now().toString()
-									});
-								}
-
-								// Replace the existing message with the updated one
-								return prevMessages.map((msg) =>
-									msg.players && !msg.isUpdate ? updatedMessage : msg
-								);
-							} else {
-								// No existing message, add as new
-								return [
-									{
-										...data,
-										timestamp: new Date().toISOString()
-									},
-									...prevMessages
-								];
-							}
-						});
-					} else if (data.players) {
-						// Regular message with players data - add to messages
-						const newMessage = {
-							...data,
-							timestamp: new Date().toISOString(),
-							isNew: true,
-							messageId: data.messageId || Date.now().toString()
-						};
-
-						setPushedMessages((prev) => [newMessage, ...prev]);
-
-						// Check if regular message also contains specials data
-						if (data.specials) {
-							setSpecialsData({
-								fixture_id: data.fixture_id,
-								specials: data.specials,
-								isSpecials: true,
-								specialsMessageId: data.messageId || Date.now().toString()
-							});
-						}
-
-						// Note: isNew flag will remain true (removed setTimeout for performance)
+					// Queue player data updates to prevent state conflicts from rapid updates
+					if (data.players) {
+						updateQueueRef.current.push(data);
+						processUpdateQueue();
 					}
 
 					// Update connection count when receiving messages
@@ -408,7 +437,7 @@ function App() {
 			}
 			clearInterval(interval);
 		};
-	}, []);
+	}, [processUpdateQueue]);
 
 	return (
 		<div className='app'>

@@ -850,16 +850,17 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  grid-auto-rows: max-content;
 }
 
-/* Tablet: Two accordions per row */
+/* Tablet: Two columns */
 @media (min-width: 768px) {
   .specials-accordions {
     grid-template-columns: 1fr 1fr;
   }
 }
 
-/* Desktop: Two accordions per row */
+/* Desktop: Two columns */
 @media (min-width: 1024px) {
   .specials-accordions {
     grid-template-columns: 1fr 1fr;
@@ -871,8 +872,12 @@ body {
   border-radius: 8px;
   overflow: hidden;
   background: white;
-  display: flex;
-  flex-direction: column;
+  display: block;
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  height: fit-content;
+  min-height: fit-content;
 }
 
 .accordion-header {
@@ -919,9 +924,11 @@ body {
   padding: 0;
   background: white;
   overflow-x: auto;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: block;
+  width: 100%;
+  position: relative;
+  height: auto;
+  transition: height 0.3s ease;
 }
 
 /* Specials Table */
