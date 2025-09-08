@@ -315,8 +315,8 @@ function App() {
 
 							if (existingMessage) {
 								// Update the existing message with new data
+								// Backend sends complete updated data, so replace the entire message
 								const updatedMessage = {
-									...existingMessage,
 									...data,
 									timestamp: new Date().toISOString()
 								};
